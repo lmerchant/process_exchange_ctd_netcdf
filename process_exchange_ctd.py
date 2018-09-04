@@ -259,23 +259,6 @@ def add_metadata_to_xarray_dataset(metadata_all, metadata_dtypes):
 
 def merge_in_metadata_dataset(metadata_names, metadata_xr, ctd_xr):
 
-  # Fill metadata values the same on all N levels?
-  # dim_size = ctd_xr.sizes
-  # num_levels = dim_size['N_level']
-  # num_profiles = dim_size['N_profile']
-
-  # metadata_pd = metadata_xr.to_dataframe()
-
-  # df = metadata_pd
-  # b = df.unstack()
-
-  # for i in range(num_levels):
-  #   b.loc[i] = b.loc[0]
- 
-  # c = b.stack()
-  # print(c)
-
-
   ctd_xr = xr.merge([metadata_xr, ctd_xr])
 
 
@@ -342,7 +325,7 @@ def save_as_netcdf(ctd_xr):
   # Get expocode to include in filename
   expocode = ctd_xr['EXPOCODE'][0].values[0]
 
-  filename = expocode + '_2.nc'
+  filename = expocode + '.nc'
 
   netcdf_filename = Config.NETCDF_DIR.joinpath(filename)
 
