@@ -166,8 +166,7 @@ def get_parameter_dtypes(parameter_units):
   for key, value in parameter_units.items():
 
     if 'FLAG' in key:
-      parameter_dtypes[key] = np.int16
-      #parameter_dtypes[key] = np.float64
+      parameter_dtypes[key] = np.int8
 
     else:
       parameter_dtypes[key] = np.float64
@@ -190,13 +189,13 @@ def add_body_to_xarray_dataset(body_all, parameter_names, parameter_dtypes):
 
 
   # Convert xarray to pandas dataframe to replace NaN values in flags
-  # Fill NaN values in qc flags with an interger fill value (-999?)
+  # Fill NaN values in qc flags with an interger fill value (9?)
   ctd_pd = ctd_xr.to_dataframe()
 
 
   for name in parameter_names:
-    if 'FLAG' in name and parameter_dtypes[name] == np.int16:
-      ctd_pd.loc[ctd_pd[name].isnull(), [name]] = -999
+    if 'FLAG' in name and parameter_dtypes[name] == np.int8:
+      ctd_pd.loc[ctd_pd[name].isnull(), [name]] = 9
 
 
   # Assign data types
@@ -210,15 +209,17 @@ def add_body_to_xarray_dataset(body_all, parameter_names, parameter_dtypes):
 
   # These parameters can be fruitfully combined to compress discretized data on 
   #disk. For example, to save the variable foo with a precision of 0.1 in 16-bit 
-  #integers while converting NaN to -9999, we would use 
-  #encoding={'foo': {'dtype': 'int16', 'scale_factor': 0.1, '_FillValue': -9999}}scale_factor is the precision
+  #integers while converting NaN to 9, we would use 
+  #encoding={'foo': {'dtype': 'int8', 'scale_factor': 0.1, '_FillValue': 9}}scale_factor is the precision
+
+  # encoding only works for writing to disk
 
 
 
   # Convert back to xarray
   ctd_xr = ctd_pd.to_xarray()
 
-  #ctdpres_flag_encoding = {'CTDPRS_FLAG_W': {'dtype': 'int16', 'scale_factor': 0.1, '_FillValue': -9999}}
+  #ctdpres_flag_encoding = {'CTDPRS_FLAG_W': {'dtype': 'int8', 'scale_factor': 0.1, '_FillValue': 9}}
   #ctd_xr.encoding = ctdpres_flag_encoding
 
 
@@ -260,6 +261,9 @@ def add_metadata_to_xarray_dataset(metadata_all, metadata_dtypes):
 def merge_in_metadata_dataset(metadata_names, metadata_xr, ctd_xr):
 
   ctd_xr = xr.merge([metadata_xr, ctd_xr])
+
+  # Drop N_level and N_profile as coordinates from dataset
+  ctd_xr.drop(['N_profile', 'N_level'])
 
 
   return ctd_xr
@@ -304,7 +308,7 @@ def add_parameter_attributes_to_xarray(parameter_units, ctd_xr):
   for name in parameter_units:
 
     if 'FLAG' in name:
-      ctd_xr[name].attrs = {'_FillValue': -999} 
+      ctd_xr[name].attrs = {'_FillValue': 9} 
     else:
       ctd_xr[name].attrs = {'units': parameter_units[name]} 
 
