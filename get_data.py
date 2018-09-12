@@ -13,6 +13,7 @@ of parameter names and units
 """
 
 import pandas as pd
+import datetime as dt
 
 
 def get_all_data(raw_files):
@@ -120,7 +121,21 @@ def extract_metadata(metadata_lines):
 
   metadata_df = pd.DataFrame(metadata_content, index=[0])
 
-  # rename index (column name of rows)
+
+  #Add datetime column from date and time columns
+  #If datetime can't be created, the value created = NaT 
+  if 'TIME' in metadata_df.columns:
+    datetime_str = metadata_df['DATE'] + metadata_df['TIME']
+    metadata_df['DATETIME'] =  pd.to_datetime(datetime_str, format='%Y%m%d%H%M', errors='coerce')
+  else:
+    datetime_str = metadata_df['DATE']
+    metadata_df['DATETIME'] =  pd.to_datetime(datetime_str, format='%Y%m%d', errors='coerce')
+
+  # Convert datetime into seconds from 1/1/1970
+  metadata_df['TIME_FROM_1970'] = (metadata_df['DATETIME'] - dt.datetime(1970,1,1)).dt.total_seconds()
+
+
+  # rename dataframe index (column name representing rows)
   metadata_df.index.names = ['N_level']
 
   return metadata_df  
@@ -161,9 +176,9 @@ def get_body_content(file_content, parameter_names, end_parameter_line):
   # Add column names
   body_df.columns = parameter_names
 
-  # rename index (column name of rows)
+  # rename dataframe index (column name representing rows)
   body_df.index.names = ['N_level']
-
+ 
   return body_df
 
 
