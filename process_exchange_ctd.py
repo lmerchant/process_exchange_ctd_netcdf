@@ -118,9 +118,9 @@ def process_folder(raw_dir):
   ctd_xr = add_parameter_attributes_to_xarray(parameter_units, ctd_xr, fill_value)
   ctd_xr = add_global_attributes_to_xarray(ctd_xr)
 
-  print(ctd_xr)
 
-  print(ctd_xr['DAYS_FROM_1970'])
+  print(ctd_xr)
+  #print(ctd_xr['DAYS_FROM_1970'])
 
 
   print('Save as NetCDF')
@@ -197,6 +197,7 @@ def add_body_to_xarray_dataset(body_all, parameter_names, parameter_dtypes, fill
     if 'FLAG' in name and parameter_dtypes[name] == np.int8:
       ctd_pd.loc[ctd_pd[name].isnull(), [name]] = fill_value['flag']
 
+
   # Assign data types
   ctd_pd = ctd_pd.astype(parameter_dtypes)
 
@@ -211,20 +212,15 @@ def add_body_to_xarray_dataset(body_all, parameter_names, parameter_dtypes, fill
 
 def add_metadata_to_xarray_dataset(metadata_all, metadata_names, metadata_dtypes, fill_value):
 
-  # index column of each body dataframe was renamed 'N_level'
+  # index column of each metadata dataframe was renamed 'Metadata_index'
   # The xarray dimension N_profile keeps track of each dataframe
 
   # Create xarray dataset from list of dataframes with
-  # Dimensions: (N_level, N_profile)
+  # Dimensions: (N_profile, Metadata_index)
   metadata_xr = xr.concat([df.to_xarray() for df in metadata_all], dim = 'N_profile')
-
 
   # Convert to dataframe and assign data types
   metadata_pd = metadata_xr.to_dataframe()
-
-  print(metadata_pd['DAYS_FROM_1970'])
-
-  # TODO  Do this after merge metadata with ctd
 
 
   # Fill NaN values in datetime with NaT
@@ -232,14 +228,15 @@ def add_metadata_to_xarray_dataset(metadata_all, metadata_names, metadata_dtypes
     if 'DATETIME' or 'DAYS_FROM_1970' in name:
       metadata_pd.loc[metadata_pd[name].isnull(), [name]] = fill_value['datetime']
 
+
   # Assign data types
   metadata_pd = metadata_pd.astype(metadata_dtypes)
 
   # Convert back to xarray
   metadata_xr = metadata_pd.to_xarray()
 
-  # Transpose dimension order to (N_profile, N_level)
-  metadata_xr = metadata_xr.transpose()
+  # Transpose dimension order to (N_profile, Metadata_index)
+  metadata_xr = metadata_xr.transpose()  
 
   return metadata_xr
 
@@ -248,8 +245,10 @@ def merge_in_metadata_dataset(metadata_names, metadata_xr, ctd_xr):
 
   ctd_xr = xr.merge([metadata_xr, ctd_xr])
 
+
   # Drop N_level and N_profile as coordinates from dataset
-  ctd_xr.drop(['N_profile', 'N_level'])
+  # And also metadata_index
+  ctd_xr.drop(['N_profile', 'N_level', 'Metadata_index'])
 
   return ctd_xr
 
@@ -311,13 +310,10 @@ def save_as_netcdf(ctd_xr):
 
   # Save xarray as netcdf
 
-  # set encoding
-  #encoding_attrs = {'DAYS_FROM_1970':{'units':'days since 1970-01-01'}}
-
   # Get expocode to include in filename
   expocode = ctd_xr['EXPOCODE'][0].values[0]
 
-  filename = expocode + '_dt.nc'
+  filename = expocode + '.nc'
 
   netcdf_filename = Config.NETCDF_DIR.joinpath(filename)
 
@@ -326,7 +322,7 @@ def save_as_netcdf(ctd_xr):
   except:
     pass
 
-  #ctd_xr.to_netcdf(netcdf_filename, encoding=encoding_attrs)
+
   ctd_xr.to_netcdf(netcdf_filename)
 
 
