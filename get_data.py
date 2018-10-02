@@ -138,8 +138,11 @@ def extract_metadata(metadata_lines):
   metadata_df['DAYS_FROM_1970'] = metadata_df['DATETIME'] - dt.datetime(1970,1,1)
 
 
+
   # rename dataframe index (column name representing rows)
-  metadata_df.index.names = ['N_level']
+  metadata_df.index.names = ['Metadata_index']
+
+
 
   return metadata_df  
 
