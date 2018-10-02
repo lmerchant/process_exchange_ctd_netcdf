@@ -47,6 +47,7 @@ distinction for indexing and computations. Coordinates indicate constant/fixed/
 independent quantities, unlike the varying/measured/dependent quantities that 
 belong in data.
 
+In this program, do not want N_level or N_profile set as xarray coordinates.
 
 """
 
@@ -85,7 +86,6 @@ def create_folders():
 def process_folder(raw_dir):
 
   print('Get data')
-
   # Get sorted list of files in exchange ctd format to convert
   raw_files = get_sorted_files(raw_dir, Config.SORT_ROUTINE)
 
@@ -101,58 +101,62 @@ def process_folder(raw_dir):
   # Add all data and attributes to an xarray
   print('Create xarrays')
 
+  # Fill values if NaN
+  fill_value = {'flag': 9, 'datetime': np.datetime64('NaT')}
+
   # Create xarray to hold body data
-  ctd_xr = add_body_to_xarray_dataset(body_all, parameter_names, parameter_dtypes)
+  ctd_xr = add_body_to_xarray_dataset(body_all, parameter_names, parameter_dtypes, fill_value)
 
   # Create xarray to hold metadata
-  metadata_xr = add_metadata_to_xarray_dataset(metadata_all, metadata_dtypes)
+  metadata_xr = add_metadata_to_xarray_dataset(metadata_all, metadata_names, metadata_dtypes, fill_value)
 
   # Merge body and metadata xarrays into one
   ctd_xr = merge_in_metadata_dataset(metadata_names, metadata_xr, ctd_xr)
 
   # Add NetCDF attributes to xarray
   ctd_xr = add_metadata_attributes_to_xarray(metadata_names, ctd_xr)
-  ctd_xr = add_parameter_attributes_to_xarray(parameter_units, ctd_xr)
+  ctd_xr = add_parameter_attributes_to_xarray(parameter_units, ctd_xr, fill_value)
   ctd_xr = add_global_attributes_to_xarray(ctd_xr)
 
-  print('Save as NetCDF')
+  print(ctd_xr)
 
+  print(ctd_xr['DAYS_FROM_1970'])
+
+
+  print('Save as NetCDF')
   # Convert xarray to NetCDF format and save
   save_as_netcdf(ctd_xr)
 
 
   print('Save as Mat')
-
   # Convert NetCDF format to mat format and save
-  save_as_mat(ctd_xr)
-
-
-  # print(ctd_xr)
-
-  # print(ctd_xr['CTDPRS'])
-
-  # print(ctd_xr['CTDPRS'][0:7])
-
-
-  print(ctd_xr['CTDPRS_FLAG_W'])
+  #save_as_mat(ctd_xr)
 
 
 def get_metadata_dtypes(metadata_names):
   
   metadata_dtypes = {}
 
-  # # iterate through metadata and set dtype
-  # for key, value in parameter_units.items():
-
+  # iterate through metadata and set dtype
+  # dtype is object (string) by default
   for name in metadata_names:
  
-    metadata_dtypes[name] = np.str
+    metadata_dtypes[name] = object
 
     if name == 'LATITUDE':
       metadata_dtypes[name] = np.float64
 
     if name == 'LONGITUDE':
       metadata_dtypes[name] = np.float64
+
+    if name == 'DEPTH':
+      metadata_dtypes[name] = np.float64
+
+    if name == 'DATETIME':
+      metadata_dtypes[name] = np.datetime64
+
+    if name == 'DAYS_FROM_1970':
+      metadata_dtypes[name] = np.timedelta64      
 
 
   return metadata_dtypes
@@ -175,76 +179,60 @@ def get_parameter_dtypes(parameter_units):
   return parameter_dtypes
 
 
-def add_body_to_xarray_dataset(body_all, parameter_names, parameter_dtypes):
+def add_body_to_xarray_dataset(body_all, parameter_names, parameter_dtypes, fill_value):
 
   # index column of each body dataframe was renamed 'N_level'
-  # The xarray dimension N_profile keeps track of each body dataframe
+  # The xarray dimension N_profile keeps track of each dataframe
 
   # Create xarray dataset from list of dataframes with
   # Dimension order (N_level, N_profile)
   ctd_xr = xr.concat([df.to_xarray() for df in body_all], dim = 'N_profile')
 
-  # Add N_profile as a Coordinate
-  ctd_xr.coords['N_profile'] = ctd_xr.coords['N_profile']
 
-
-  # Convert xarray to pandas dataframe to replace NaN values in flags
-  # Fill NaN values in qc flags with an interger fill value (9?)
+  # Convert to dataframe and assign data types
   ctd_pd = ctd_xr.to_dataframe()
 
-
+  # Fill NaN values in qc flags with an interger fill value
   for name in parameter_names:
     if 'FLAG' in name and parameter_dtypes[name] == np.int8:
-      ctd_pd.loc[ctd_pd[name].isnull(), [name]] = 9
-
+      ctd_pd.loc[ctd_pd[name].isnull(), [name]] = fill_value['flag']
 
   # Assign data types
   ctd_pd = ctd_pd.astype(parameter_dtypes)
 
-
-  # Looks like dtypes stored in file are not the same
-  # as what is read in as open_dataset
-  # Data array has an encoding setting that may solve this
-  # But how to apply this?  
-
-  # These parameters can be fruitfully combined to compress discretized data on 
-  #disk. For example, to save the variable foo with a precision of 0.1 in 16-bit 
-  #integers while converting NaN to 9, we would use 
-  #encoding={'foo': {'dtype': 'int8', 'scale_factor': 0.1, '_FillValue': 9}}scale_factor is the precision
-
-  # encoding only works for writing to disk
-
-
-
   # Convert back to xarray
   ctd_xr = ctd_pd.to_xarray()
-
-  #ctdpres_flag_encoding = {'CTDPRS_FLAG_W': {'dtype': 'int8', 'scale_factor': 0.1, '_FillValue': 9}}
-  #ctd_xr.encoding = ctdpres_flag_encoding
-
 
   # Transpose dimension order to (N_profile, N_level)
   ctd_xr = ctd_xr.transpose()
 
-  #print(ctd_xr)
-
   return ctd_xr
 
 
-def add_metadata_to_xarray_dataset(metadata_all, metadata_dtypes):
+def add_metadata_to_xarray_dataset(metadata_all, metadata_names, metadata_dtypes, fill_value):
 
   # index column of each body dataframe was renamed 'N_level'
-  # The xarray dimension N_profile keeps track of each body dataframe
+  # The xarray dimension N_profile keeps track of each dataframe
 
   # Create xarray dataset from list of dataframes with
   # Dimensions: (N_level, N_profile)
   metadata_xr = xr.concat([df.to_xarray() for df in metadata_all], dim = 'N_profile')
 
-  # Add N_profile as a Coordinate
-  metadata_xr.coords['N_profile'] = metadata_xr.coords['N_profile']
 
   # Convert to dataframe and assign data types
   metadata_pd = metadata_xr.to_dataframe()
+
+  print(metadata_pd['DAYS_FROM_1970'])
+
+  # TODO  Do this after merge metadata with ctd
+
+
+  # Fill NaN values in datetime with NaT
+  for name in metadata_names:
+    if 'DATETIME' or 'DAYS_FROM_1970' in name:
+      metadata_pd.loc[metadata_pd[name].isnull(), [name]] = fill_value['datetime']
+
+  # Assign data types
   metadata_pd = metadata_pd.astype(metadata_dtypes)
 
   # Convert back to xarray
@@ -252,8 +240,6 @@ def add_metadata_to_xarray_dataset(metadata_all, metadata_dtypes):
 
   # Transpose dimension order to (N_profile, N_level)
   metadata_xr = metadata_xr.transpose()
-
-  #print(metadata_xr)
 
   return metadata_xr
 
@@ -264,7 +250,6 @@ def merge_in_metadata_dataset(metadata_names, metadata_xr, ctd_xr):
 
   # Drop N_level and N_profile as coordinates from dataset
   ctd_xr.drop(['N_profile', 'N_level'])
-
 
   return ctd_xr
 
@@ -303,12 +288,12 @@ def add_metadata_attributes_to_xarray(metadata_names, ctd_xr):
   return ctd_xr
 
 
-def add_parameter_attributes_to_xarray(parameter_units, ctd_xr):
+def add_parameter_attributes_to_xarray(parameter_units, ctd_xr, fill_value):
 
   for name in parameter_units:
 
     if 'FLAG' in name:
-      ctd_xr[name].attrs = {'_FillValue': 9} 
+      ctd_xr[name].attrs = {'_FillValue': fill_value['flag']} 
     else:
       ctd_xr[name].attrs = {'units': parameter_units[name]} 
 
@@ -326,10 +311,13 @@ def save_as_netcdf(ctd_xr):
 
   # Save xarray as netcdf
 
+  # set encoding
+  #encoding_attrs = {'DAYS_FROM_1970':{'units':'days since 1970-01-01'}}
+
   # Get expocode to include in filename
   expocode = ctd_xr['EXPOCODE'][0].values[0]
 
-  filename = expocode + '.nc'
+  filename = expocode + '_dt.nc'
 
   netcdf_filename = Config.NETCDF_DIR.joinpath(filename)
 
@@ -338,6 +326,7 @@ def save_as_netcdf(ctd_xr):
   except:
     pass
 
+  #ctd_xr.to_netcdf(netcdf_filename, encoding=encoding_attrs)
   ctd_xr.to_netcdf(netcdf_filename)
 
 
