@@ -132,7 +132,10 @@ def extract_metadata(metadata_lines):
     metadata_df['DATETIME'] =  pd.to_datetime(datetime_str, format='%Y%m%d', errors='coerce')
 
   # Convert datetime into seconds from 1/1/1970
-  metadata_df['TIME_FROM_1970'] = (metadata_df['DATETIME'] - dt.datetime(1970,1,1)).dt.total_seconds()
+  #metadata_df['SECS_FROM_1970'] = (metadata_df['DATETIME'] - dt.datetime(1970,1,1)).dt.total_seconds()
+
+  # Convert datetime into days from 1/1/1970
+  metadata_df['DAYS_FROM_1970'] = metadata_df['DATETIME'] - dt.datetime(1970,1,1)
 
 
   # rename dataframe index (column name representing rows)
