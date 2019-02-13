@@ -123,7 +123,10 @@ def extract_metadata(metadata_lines):
 
 
   #Add datetime column from date and time columns
-  #If datetime can't be created, the value created = NaT 
+  #If datetime can't be created, the value created = NaT
+  # since datetime is np.datetime64, this is a time delta
+  # and so the datetime value is a difference from the min
+  # datetime. This is called a proleptic_gregorian
   if 'TIME' in metadata_df.columns:
     datetime_str = metadata_df['DATE'] + metadata_df['TIME']
     metadata_df['DATETIME'] =  pd.to_datetime(datetime_str, format='%Y%m%d%H%M', errors='coerce')
@@ -132,17 +135,10 @@ def extract_metadata(metadata_lines):
     metadata_df['DATETIME'] =  pd.to_datetime(datetime_str, format='%Y%m%d', errors='coerce')
 
   # Convert datetime into seconds from 1/1/1970
-  #metadata_df['SECS_FROM_1970'] = (metadata_df['DATETIME'] - dt.datetime(1970,1,1)).dt.total_seconds()
-
-  # Convert datetime into days from 1/1/1970
-  metadata_df['DAYS_FROM_1970'] = metadata_df['DATETIME'] - dt.datetime(1970,1,1)
-
-
+  metadata_df['SECS_FROM_1970'] = (metadata_df['DATETIME'] - dt.datetime(1970,1,1)).dt.total_seconds()
 
   # rename dataframe index (column name representing rows)
-  metadata_df.index.names = ['Metadata_index']
-
-
+  metadata_df.index.names = ['Meta_index']
 
   return metadata_df  
 
