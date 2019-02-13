@@ -56,6 +56,8 @@ import numpy as np
 import scipy.io as sio
 import pandas as pd
 import xarray as xr
+import csv
+import json
 
 from config import Config
 
@@ -113,15 +115,17 @@ def process_folder(raw_dir):
   # Merge body and metadata xarrays into one
   ctd_xr = merge_in_metadata_dataset(metadata_names, metadata_xr, ctd_xr)
 
+  # Get metadata attributes
+  metadata_attributes_file = './metadata_attributes.csv'
+  metadata_attributes = get_metadata_attributes(metadata_attributes_file)
+
   # Add NetCDF attributes to xarray
-  ctd_xr = add_metadata_attributes_to_xarray(metadata_names, ctd_xr)
+  ctd_xr = add_metadata_attributes_to_xarray(metadata_attributes, metadata_names, ctd_xr)
   ctd_xr = add_parameter_attributes_to_xarray(parameter_units, ctd_xr, fill_value)
   ctd_xr = add_global_attributes_to_xarray(ctd_xr)
 
 
   print(ctd_xr)
-  #print(ctd_xr['DAYS_FROM_1970'])
-
 
   print('Save as NetCDF')
   # Convert xarray to NetCDF format and save
@@ -155,8 +159,8 @@ def get_metadata_dtypes(metadata_names):
     if name == 'DATETIME':
       metadata_dtypes[name] = np.datetime64
 
-    if name == 'DAYS_FROM_1970':
-      metadata_dtypes[name] = np.timedelta64      
+    if name == 'SECS_FROM_1970':
+      metadata_dtypes[name] = np.float64      
 
 
   return metadata_dtypes
@@ -212,11 +216,11 @@ def add_body_to_xarray_dataset(body_all, parameter_names, parameter_dtypes, fill
 
 def add_metadata_to_xarray_dataset(metadata_all, metadata_names, metadata_dtypes, fill_value):
 
-  # index column of each metadata dataframe was renamed 'Metadata_index'
+  # index column of each metadata dataframe was renamed 'Meta_index'
   # The xarray dimension N_profile keeps track of each dataframe
 
   # Create xarray dataset from list of dataframes with
-  # Dimensions: (N_profile, Metadata_index)
+  # Dimensions: (N_profile, Meta_index)
   metadata_xr = xr.concat([df.to_xarray() for df in metadata_all], dim = 'N_profile')
 
   # Convert to dataframe and assign data types
@@ -225,7 +229,7 @@ def add_metadata_to_xarray_dataset(metadata_all, metadata_names, metadata_dtypes
 
   # Fill NaN values in datetime with NaT
   for name in metadata_names:
-    if 'DATETIME' or 'DAYS_FROM_1970' in name:
+    if 'DATETIME' in name:
       metadata_pd.loc[metadata_pd[name].isnull(), [name]] = fill_value['datetime']
 
 
@@ -235,7 +239,7 @@ def add_metadata_to_xarray_dataset(metadata_all, metadata_names, metadata_dtypes
   # Convert back to xarray
   metadata_xr = metadata_pd.to_xarray()
 
-  # Transpose dimension order to (N_profile, Metadata_index)
+  # Transpose dimension order to (N_profile, Meta_index)
   metadata_xr = metadata_xr.transpose()  
 
   return metadata_xr
@@ -247,42 +251,32 @@ def merge_in_metadata_dataset(metadata_names, metadata_xr, ctd_xr):
 
 
   # Drop N_level and N_profile as coordinates from dataset
-  # And also metadata_index
-  ctd_xr.drop(['N_profile', 'N_level', 'Metadata_index'])
+  # And also Meta_index
+  ctd_xr.drop(['N_profile', 'N_level', 'Meta_index'])
 
   return ctd_xr
 
 
-def add_metadata_attributes_to_xarray(metadata_names, ctd_xr):
+def get_metadata_attributes(attribute_file):
+  
+  data = []
+  with open(attribute_file) as f:
+    for row in csv.DictReader(f):
+        data.append(row)
 
-  # Add netcdf attributes
-  for name in metadata_names:
+  json_string = json.dumps(data)
 
-    if name == 'LATITUDE':
-      ctd_xr['LATITUDE'].attrs = {'units':'degrees_North', 'long_name':'Latitude'}
+  json_data = json.loads(json_string)
 
-    if name == 'LONGITUDE':
-      ctd_xr['LONGITUDE'].attrs = {'units':'degrees', 'long_name':'Longitude'}
+  return json_data
 
-    # TODO: Find out what units to use for date, time, dec_year, stnnbr, castno
 
-    if name == 'DATE':
-      ctd_xr['DATE'].attrs = {'units':'yyyymmdd', 'long_name':'Date'}
+def add_metadata_attributes_to_xarray(attributes, metadata_names, ctd_xr):
 
-    if name == 'TIME':
-      ctd_xr['TIME'].attrs = {'units':'hhmm', 'long_name':'Time'}
+  for attribute in attributes:
 
-    if name == 'DEC_YEAR':
-      ctd_xr['DEC_YEAR'].attrs = {'units':'yyyy.####', 'long_name':'Decimal Year'}
-
-    if name == 'STNNBR':
-      ctd_xr['STNNBR'].attrs = {'units':'number', 'long_name':'Station Number'}
-
-    if name == 'CASTNO':
-      ctd_xr['CASTNO'].attrs = {'units':'number', 'long_name':'Cast Number'}
-
-    if name == 'DEPTH':
-      ctd_xr['DEPTH'].attrs = {'units':'meters', 'long_name':'Depth'}      
+    if attribute['variable'] in metadata_names:
+      ctd_xr[attribute['variable']].attrs = {'units': attribute['units'], 'long_name': attribute['long_name']}
 
   return ctd_xr
 
