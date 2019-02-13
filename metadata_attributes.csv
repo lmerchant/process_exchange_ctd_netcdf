@@ -1,0 +1,9 @@
+variable,units,long_name
+LATITUDE,degrees_North,Latitude
+LONGITUDE,degrees,Longitude
+DATE,yyyymmdd,Date
+TIME,hhmm,Time
+DEC_YEAR,yyyy.####,DecimalYear
+STNNBR,number,StationNumber
+CASTNO,number,CastNumber
+DEPTH,meters,Depth
