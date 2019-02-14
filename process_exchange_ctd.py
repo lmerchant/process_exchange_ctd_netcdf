@@ -110,20 +110,10 @@ def process_folder(raw_dir):
   ctd_xr = add_body_to_xarray_dataset(body_all, parameter_names, parameter_dtypes, fill_value)
 
   # Create xarray to hold metadata
-  #metadata_xr = add_metadata_to_xarray_dataset(metadata_all, metadata_names, metadata_dtypes, fill_value)
-
-  metadata_xr = add_metadata_to_xarray_dataset_series(metadata_all, metadata_names, metadata_dtypes, fill_value)
-
-  md_name_ds = add_metadata_to_xarray_dataset_series2(metadata_all, metadata_names, metadata_dtypes, fill_value)
+  md_name_ds = add_metadata_to_xarray_dataset(metadata_all, metadata_names, metadata_dtypes, fill_value)
 
   # Merge body and metadata xarrays into one
-  #ctd_xr = merge_in_metadata_dataset(metadata_names, metadata_xr, ctd_xr)
-
-  #ctd_xr = merge_in_metadata_dataset_series(metadata_names, metadata_xr, ctd_xr)
-
-
-  ctd_xr = merge_in_metadata_dataset_series2(metadata_names, md_name_ds, ctd_xr)
-
+  ctd_xr = merge_in_metadata_dataset(metadata_names, md_name_ds, ctd_xr)
 
   # Get metadata attributes
   metadata_attributes_file = './metadata_attributes.csv'
@@ -131,8 +121,6 @@ def process_folder(raw_dir):
 
   # Add NetCDF attributes to xarray
   ctd_xr = add_metadata_attributes_to_xarray(metadata_attributes, metadata_names, ctd_xr)
-
-  ctd_xr = add_metadata_attributes_to_xarray_series(metadata_attributes, metadata_names, ctd_xr)
 
   ctd_xr = add_parameter_attributes_to_xarray(parameter_units, ctd_xr, fill_value)
 
@@ -143,9 +131,7 @@ def process_folder(raw_dir):
 
   print('Save as NetCDF')
   # Convert xarray to NetCDF format and save
-  #save_as_netcdf(ctd_xr)
-
-  save_as_netcdf_series(ctd_xr)
+  save_as_netcdf(ctd_xr)
 
 
   print('Save as Mat')
@@ -232,84 +218,6 @@ def add_body_to_xarray_dataset(body_all, parameter_names, parameter_dtypes, fill
 
 def add_metadata_to_xarray_dataset(metadata_all, metadata_names, metadata_dtypes, fill_value):
 
-  # index column of each metadata dataframe was renamed 'Meta_index'
-  # The xarray dimension N_profile keeps track of each dataframe
-
-  # Create xarray dataset from list of dataframes with
-  # Dimensions: (N_profile, Meta_index)
-  metadata_xr = xr.concat([df.to_xarray() for df in metadata_all], dim = 'N_profile')
-
-
-  #TOOO
-  # Can I convert dataframe to a series and then add to an xarray with an
-  # Index called N_profile.  Does a series even have an index? And would
-  # this make it two dimensional
-
-  # Convert to dataframe and assign data types
-  metadata_pd = metadata_xr.to_dataframe()
-
-  # Fill NaN values in datetime with NaT
-  for name in metadata_names:
-    if 'DATETIME' in name:
-      metadata_pd.loc[metadata_pd[name].isnull(), [name]] = fill_value['datetime']
-
-
-  # Assign data types
-  metadata_pd = metadata_pd.astype(metadata_dtypes)
-
-  # Convert back to xarray
-  metadata_xr = metadata_pd.to_xarray()
-
-  # Transpose dimension order to (N_profile, Meta_index)
-  metadata_xr = metadata_xr.transpose()  
-
-  return metadata_xr
-
-
-def add_metadata_to_xarray_dataset_series(metadata_all, metadata_names, metadata_dtypes, fill_value):
-
-  # The xarray dimension N_profile keeps track of each dataframe
-
-  new_list = []
-
-  for metadata_frame in metadata_all:
-
-    # Fill NaN values in datetime with NaT
-    for name in metadata_names:
-      if 'DATETIME' in name:
-        metadata_frame.loc[metadata_frame[name].isnull(), [name]] = fill_value['datetime']
-
-    # For series, all have to be same dtype
-
-    metadata_series = metadata_frame.squeeze()
-    new_list.append(metadata_series)
-
-  metadata_xr = xr.concat([df.to_xarray() for df in new_list], dim = 'N_profile')
-
-
-  return metadata_xr
-
-
-def add_metadata_to_xarray_dataset_series2(metadata_all, metadata_names, metadata_dtypes, fill_value):
-
-  # The xarray dimension N_profile keeps track of each dataframe
-
-  # expocode_list = []
-
-  # for metadata_frame in metadata_all:
-
-  #   expocode = metadata_frame.iloc[0]['EXPOCODE'] 
-
-  #   # For series, all have to be same dtype
-  #   expocode_list.append(expocode)
-
-  # expocode_series = pd.Series(expocode_list).astype(str)
-
-  # expocode_xr = expocode_series.to_xarray()
-
-  # print(expocode_xr)
-
-
   # metadata_all is a list of data frames
   # concat all data frames into one
 
@@ -330,41 +238,7 @@ def add_metadata_to_xarray_dataset_series2(metadata_all, metadata_names, metadat
   return md_name_ds
 
 
-def merge_in_metadata_dataset(metadata_names, metadata_xr, ctd_xr):
-
-  ctd_xr = xr.merge([metadata_xr, ctd_xr])
-
-
-  # Drop N_level and N_profile as coordinates from dataset
-  # And also Meta_index
-  ctd_xr.drop(['N_profile', 'N_level', 'Meta_index'])
-
-  return ctd_xr
-
-
-def merge_in_metadata_dataset_series(metadata_names, metadata_xr, ctd_xr):
-
-  # Rename metadata_xr from 0 to METADATA
-  metadata_xr = metadata_xr.rename('METADATA')
-
-
-  ctd_xr = xr.merge([metadata_xr, ctd_xr])
-
-  # Rename metadata_xr Coordinate index to 'Meta_index'
-  ctd_xr =  ctd_xr.rename({'index':'N_metadata'})
-
-  # Drop N_level and N_profile as coordinates from dataset
-  # And also N_metadata
-  ctd_xr.drop(['N_profile', 'N_level', 'N_metadata'])
-
-  return ctd_xr
-
-
-def merge_in_metadata_dataset_series2(metadata_names, md_name_ds, ctd_xr):
-
-  depth = md_name_ds['DEPTH'].to_xarray()
-
-  ctd_xr2 = xr.merge([depth, ctd_xr])
+def merge_in_metadata_dataset(metadata_names, md_name_ds, ctd_xr):
 
   for md_name in metadata_names:
 
@@ -381,6 +255,7 @@ def merge_in_metadata_dataset_series2(metadata_names, md_name_ds, ctd_xr):
 def get_metadata_attributes(attribute_file):
   
   data = []
+
   with open(attribute_file) as f:
     for row in csv.DictReader(f):
         data.append(row)
@@ -398,17 +273,6 @@ def add_metadata_attributes_to_xarray(attributes, metadata_names, ctd_xr):
 
     if attribute['variable'] in metadata_names:
       ctd_xr[attribute['variable']].attrs = {'units': attribute['units'], 'long_name': attribute['long_name']}
-
-  return ctd_xr
-
-
-def add_metadata_attributes_to_xarray_series(attributes, metadata_names, ctd_xr):
-
-  # for attribute in attributes:
-
-  #   if attribute['variable'] in metadata_names:
-  #     ctd_xr[attribute['variable']].attrs = {'units': attribute['units'], 'long_name': attribute['long_name']}
-
 
   return ctd_xr
 
@@ -437,33 +301,6 @@ def save_as_netcdf(ctd_xr):
   # Save xarray as netcdf
 
   # Get expocode to include in filename
-  expocode = ctd_xr['EXPOCODE'][0].values[0]
-
-  filename = expocode + '.nc'
-
-  netcdf_filename = Config.NETCDF_DIR.joinpath(filename)
-
-  try:
-    os.remove(netcdf_filename)
-  except:
-    pass
-
-  # TODO 
-  # issure here converting xarray to netcdf
-  # The dtype is wrong.
-
-  ctd_xr.to_netcdf(netcdf_filename)
-
-
-def save_as_netcdf_series(ctd_xr):
-
-  # Save xarray as netcdf
-
-  # Get expocode to include in filename
-  #expocode = str(ctd_xr['METADATA'][0][0].values)
-
-  #expocode = str(ctd_xr.sel(N_metadata = 'EXPOCODE', N_profile = 0)['METADATA'].values)
-
   expocode = str(ctd_xr['EXPOCODE'][0].values)
 
   filename = expocode + '.nc'
