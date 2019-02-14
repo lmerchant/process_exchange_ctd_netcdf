@@ -106,20 +106,11 @@ def process_folder(raw_dir):
   # Fill values if NaN
   fill_value = {'flag': 9, 'datetime': np.datetime64('NaT')}
 
-  # # Create xarray to hold body data
-  # ctd_xr = add_body_to_xarray_dataset(body_all, parameter_names, parameter_dtypes, fill_value)
-
-  # Create xarray to hold metadata
+  # Gather metadata as a data series
   md_name_ds = get_metadata_data_series(metadata_all, metadata_names, metadata_dtypes, fill_value)
 
   # # Merge body and metadata xarrays into one
-  # ctd_xr = merge_in_metadata_dataset(metadata_names, md_name_ds, ctd_xr)
-
-
-
-  ctd_xr = add_body_metadata_to_xarray_dataset(body_all, parameter_names, parameter_dtypes, fill_value, metadata_names, md_name_ds)
-
-
+  ctd_xr = add_body_and_metadata_to_xarray_dataset(body_all, parameter_names, parameter_dtypes, fill_value, metadata_names, md_name_ds)
 
   # Get metadata attributes
   metadata_attributes_file = './metadata_attributes.csv'
@@ -191,36 +182,6 @@ def get_parameter_dtypes(parameter_units):
   return parameter_dtypes
 
 
-def add_body_to_xarray_dataset(body_all, parameter_names, parameter_dtypes, fill_value):
-
-  # index column of each body dataframe was renamed 'N_level'
-  # The xarray dimension N_profile keeps track of each dataframe
-
-  # Create xarray dataset from list of dataframes with
-  # Dimension order (N_level, N_profile)
-  ctd_xr = xr.concat([df.to_xarray() for df in body_all], dim = 'N_profile')
-
-  # Convert to dataframe and assign data types
-  ctd_pd = ctd_xr.to_dataframe()
-
-  # Fill NaN values in qc flags with an interger fill value
-  for name in parameter_names:
-    if 'FLAG' in name and parameter_dtypes[name] == np.int8:
-      ctd_pd.loc[ctd_pd[name].isnull(), [name]] = fill_value['flag']
-
-
-  # Assign data types
-  ctd_pd = ctd_pd.astype(parameter_dtypes)
-
-  # Convert back to xarray
-  ctd_xr = ctd_pd.to_xarray()
-
-  # Transpose dimension order to (N_profile, N_level)
-  ctd_xr = ctd_xr.transpose()
-
-  return ctd_xr
-
-
 def get_metadata_data_series(metadata_all, metadata_names, metadata_dtypes, fill_value):
 
   # metadata_all is a list of data frames
@@ -243,9 +204,7 @@ def get_metadata_data_series(metadata_all, metadata_names, metadata_dtypes, fill
   return md_name_ds
 
 
-
-
-def add_body_metadata_to_xarray_dataset(body_all, parameter_names, parameter_dtypes, fill_value, metadata_names, md_name_ds):
+def add_body_and_metadata_to_xarray_dataset(body_all, parameter_names, parameter_dtypes, fill_value, metadata_names, md_name_ds):
 
   # index column of each body dataframe was renamed 'N_level'
   # The xarray dimension N_profile keeps track of each dataframe
@@ -283,26 +242,6 @@ def add_body_metadata_to_xarray_dataset(body_all, parameter_names, parameter_dty
 
   # Rename index
   ctd_xr =  ctd_xr.rename({'index':'N_profile'})
-
-
-  return ctd_xr
-
-
-
-
-def merge_in_metadata_dataset(metadata_names, md_name_ds, ctd_xr):
-
-  # Since merge appended to top, reverse order of metadata names
-  metadata_names_reversed = metadata_names[::-1]
-
-  for md_name in metadata_names_reversed:
-
-    name_xr = md_name_ds[md_name].to_xarray()
-
-    ctd_xr = xr.merge([name_xr, ctd_xr])
-
-  # Rename index
-  ctd_xr =  ctd_xr.rename({'index':'N_metadata'})
 
 
   return ctd_xr
