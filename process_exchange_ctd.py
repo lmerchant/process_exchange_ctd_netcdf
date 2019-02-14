@@ -240,7 +240,10 @@ def add_metadata_to_xarray_dataset(metadata_all, metadata_names, metadata_dtypes
 
 def merge_in_metadata_dataset(metadata_names, md_name_ds, ctd_xr):
 
-  for md_name in metadata_names:
+  # Since merge appended to top, reverse order of metadata names
+  metadata_names_reversed = metadata_names[::-1]
+
+  for md_name in metadata_names_reversed:
 
     name_xr = md_name_ds[md_name].to_xarray()
 
