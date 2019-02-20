@@ -10,6 +10,13 @@ input: file list to process
 output: parsed into metadata and body dataframes along with lists
 of parameter names and units
 
+
+# TODO
+# instead of declaring end line as 1 past it for including in range,
+# just add one to end of range and keep ending lines actual line number
+
+# Import metadata into a Series and not a dataframe
+
 """
 
 import pandas as pd
@@ -22,8 +29,8 @@ def get_all_data(raw_files):
     body_all = []
 
     # Then extract metadata and body portion for all files
-    is_first_file = True
 
+    is_first_file = True
 
     for datafile in raw_files:
 
@@ -64,11 +71,12 @@ def get_file_content(filename):
 
 def get_metadata_content(file_content):
 
-    # Get header line start and number of headers
+    # Get header line giving number of headers
     header_line, header_line_number = find_header_line(file_content)
     num_headers = get_number_of_headers(header_line)
 
     # Metadata lines are from header lines
+    # end_metadata_line is one past metadata to capture in range
     start_metadata_line = header_line_number + 1
     end_metadata_line = header_line_number + num_headers
 
@@ -159,6 +167,10 @@ def get_parameter_content(file_content, end_metadata_line):
 
     # Parameter lines are following header lines and
     # consist of the parameter names and corresponding units
+    # end_metadata_line is one past metadata to capture in 
+    # metadata range
+    # end_parameter_line is one past parameter line to 
+    # capture in range
     start_parameter_line = end_metadata_line
     end_parameter_line = end_metadata_line + 2
     
