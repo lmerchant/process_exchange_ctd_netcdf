@@ -15,8 +15,6 @@ of parameter names and units
 # instead of declaring end line as 1 past it for including in range,
 # just add one to end of range and keep ending lines actual line number
 
-# Import metadata into a Series and not a dataframe
-
 """
 
 import pandas as pd
