@@ -1,9 +1,12 @@
-variable,units,long_name
-LATITUDE,degrees_North,Latitude
-LONGITUDE,degrees_East,Longitude
-DATE,yyyymmdd,Date
-TIME,hhmm,Time
-DEC_YEAR,yyyy.####,DecimalYear
-STNNBR,number,StationNumber
-CASTNO,number,CastNumber
-DEPTH,meters,Depth
+variable,units,standard_name,long_name,axis
+EXPOCODE,,,Expocode,
+SECT_ID,,,Section ID,
+LATITUDE,degrees_north,latitude,Latitude,Y
+LONGITUDE,degrees_east,longitude,Longitude,X
+DATE,YYYYMMDD,,Date,
+TIME,HHMM,,Time,
+DEC_YEAR,yyyy.####,,Decimal Year,
+STNNBR,number,,Station Number,
+CASTNO,number,,Cast Number,
+DEPTH,meters,,Depth,
+DATETIME,,datetime,Datetime,T
