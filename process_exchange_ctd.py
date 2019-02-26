@@ -97,6 +97,10 @@ def process_folder(raw_dir):
     parameter_dtypes = get_parameter_dtypes(parameter_units)
 
 
+    # Set encoding fill value for metadata to None
+    metadata_encoding = set_metadata_encoding(metadata_names)  
+
+
     # Add all data and attributes to an xarray
     print('Create xarrays')
 
@@ -125,8 +129,7 @@ def process_folder(raw_dir):
 
     print('Save as NetCDF')
     # Convert xarray to NetCDF format and save
-    save_as_netcdf(ctd_xr)
-
+    save_as_netcdf(ctd_xr, metadata_encoding)
 
     #print('Save as Mat')
     # Convert NetCDF format to mat format and save
@@ -160,6 +163,28 @@ def get_metadata_dtypes(metadata_names):
 
 
     return metadata_dtypes
+
+
+def set_metadata_encoding(metadata_names): 
+
+    # set fill value for metadata to none instead of automatic NaN
+
+    # http://xarray.pydata.org/en/latest/io.html#scaling-and-type-conversions
+    # As a default, variables with float types are attributed a _FillValue of NaN 
+    # in the output file, unless explicitly disabled with an 
+    # encoding {'_FillValue': None}.    
+
+    metadata_encoding = {}
+
+    # iterate through metadata and set dtype
+    # dtype is object (string) by default
+    for name in metadata_names:
+ 
+        name_encoding = {name: {'_FillValue': None}}
+
+        metadata_encoding = {**metadata_encoding, **name_encoding}
+
+    return metadata_encoding
 
 
 def get_parameter_dtypes(parameter_units):
@@ -196,8 +221,8 @@ def get_metadata_data_series(metadata_all, metadata_names, metadata_dtypes):
 
         series = df[md_name].squeeze()
 
+        # Apply dtypes to variables
         md_name_dtype = metadata_dtypes[md_name]
-
         metadata_ds[md_name] = series.astype(md_name_dtype)
 
     return metadata_ds
@@ -290,7 +315,7 @@ def add_global_attributes_to_xarray(ctd_xr):
     return ctd_xr
 
 
-def save_as_netcdf(ctd_xr):
+def save_as_netcdf(ctd_xr, metadata_encoding):
 
     # Save xarray as netcdf
 
@@ -309,9 +334,9 @@ def save_as_netcdf(ctd_xr):
     # Drop variables or index labels from this dataset.
     ctd_xr.drop(['N_profile', 'N_level'])
 
-    ctd_xr.to_netcdf(netcdf_filename)
+    #ctd_xr.to_netcdf(netcdf_filename)
 
-
+    ctd_xr.to_netcdf(netcdf_filename, encoding=metadata_encoding)
 
 
 # def save_as_mat(ctd_xr):
