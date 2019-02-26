@@ -291,7 +291,43 @@ def add_metadata_attributes_to_xarray(attributes, metadata_names, ctd_xr):
     for attribute in attributes:
 
         if attribute['variable'] in metadata_names:
-            ctd_xr[attribute['variable']].attrs = {'units': attribute['units'], 'long_name': attribute['long_name']}
+            #ctd_xr[attribute['variable']].attrs = {'units': attribute['units'], 'long_name': attribute['long_name']}
+
+            # TODO
+            # Add extra attributes for variable without overwriting
+
+            # Add another attribute to ctd_xr[attribute['variable']].attrs
+
+            data_attributes = {}
+
+            if 'units' in attribute.keys() and attribute['units']:
+
+                data_attr = {'units': attribute['units']}
+
+                data_attributes = {**data_attributes, **data_attr}
+
+            if 'long_name' in attribute.keys() and attribute['long_name']:
+
+                data_attr = {'long_name': attribute['long_name']}
+
+                data_attributes = {**data_attributes, **data_attr}
+
+            if 'standard_name' in attribute.keys() and attribute['standard_name']:
+
+                data_attr = {'standard_name': attribute['standard_name']}
+
+                data_attributes = {**data_attributes, **data_attr}
+
+            if 'axis' in attribute.keys() and attribute['axis']:
+
+                data_attr = {'axis': attribute['axis']}
+
+                data_attributes = {**data_attributes, **data_attr}
+                
+
+            ctd_xr[attribute['variable']].attrs = data_attributes
+
+
 
     return ctd_xr
 
@@ -311,6 +347,9 @@ def add_parameter_attributes_to_xarray(parameter_units, ctd_xr, fill_value):
 def add_global_attributes_to_xarray(ctd_xr):
 
     ctd_xr.attrs['title'] = 'CTD data'
+
+
+
 
     return ctd_xr
 
