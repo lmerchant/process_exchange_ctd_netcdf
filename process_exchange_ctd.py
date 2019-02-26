@@ -122,7 +122,12 @@ def process_folder(raw_dir):
 
     ctd_xr = add_parameter_attributes_to_xarray(parameter_units, ctd_xr, fill_value)
 
-    ctd_xr = add_global_attributes_to_xarray(ctd_xr)
+
+    # Get metadata attributes
+    global_attributes_file = './global_attributes.csv'
+    global_attributes = get_global_attributes(global_attributes_file)
+
+    ctd_xr = add_global_attributes_to_xarray(global_attributes, ctd_xr)
  
     print(ctd_xr)
 
@@ -291,12 +296,6 @@ def add_metadata_attributes_to_xarray(attributes, metadata_names, ctd_xr):
     for attribute in attributes:
 
         if attribute['variable'] in metadata_names:
-            #ctd_xr[attribute['variable']].attrs = {'units': attribute['units'], 'long_name': attribute['long_name']}
-
-            # TODO
-            # Add extra attributes for variable without overwriting
-
-            # Add another attribute to ctd_xr[attribute['variable']].attrs
 
             data_attributes = {}
 
@@ -323,7 +322,7 @@ def add_metadata_attributes_to_xarray(attributes, metadata_names, ctd_xr):
                 data_attr = {'axis': attribute['axis']}
 
                 data_attributes = {**data_attributes, **data_attr}
-                
+
 
             ctd_xr[attribute['variable']].attrs = data_attributes
 
@@ -344,12 +343,24 @@ def add_parameter_attributes_to_xarray(parameter_units, ctd_xr, fill_value):
     return ctd_xr
 
 
-def add_global_attributes_to_xarray(ctd_xr):
-
-    ctd_xr.attrs['title'] = 'CTD data'
+def get_global_attributes(attribute_file):
 
 
+    df = pd.read_csv(attribute_file, quotechar="'")
 
+    df.set_index('name', inplace=True)
+
+    attributes = df.to_dict()
+
+    return attributes['value']
+
+
+def add_global_attributes_to_xarray(attributes, ctd_xr):
+
+
+    for name, value in attributes.items():
+
+        ctd_xr.attrs[name] = value
 
     return ctd_xr
 
