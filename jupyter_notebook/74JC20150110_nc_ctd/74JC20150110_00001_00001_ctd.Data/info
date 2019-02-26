@@ -1,0 +1,154 @@
+netcdf 74JC20150110_00001_00001_ctd {
+dimensions:
+	time = 1 ;
+	pressure = 176 ;
+	latitude = 1 ;
+	longitude = 1 ;
+	string_dimension = 40 ;
+variables:
+	double pressure(pressure) ;
+		pressure:long_name = "pressure" ;
+		pressure:positive = "down" ;
+		pressure:units = "decibar" ;
+		pressure:data_min = 3. ;
+		pressure:data_max = 353. ;
+		pressure:C_format = "%8.1f" ;
+		pressure:WHPO_Variable_Name = "CTDPRS" ;
+		pressure:OBS_QC_VARIABLE = "pressure_QC" ;
+	short pressure_QC(pressure) ;
+		pressure_QC:long_name = "pressure_QC_flag" ;
+		pressure_QC:units = "woce_flags" ;
+		pressure_QC:C_format = "%1d" ;
+	double temperature(pressure) ;
+		temperature:long_name = "temperature" ;
+		temperature:units = "?C (ITS-90)" ;
+		temperature:data_min = -0.3961 ;
+		temperature:data_max = 0.4895 ;
+		temperature:C_format = "%8.4f" ;
+		temperature:WHPO_Variable_Name = "CTDTMP" ;
+		temperature:OBS_QC_VARIABLE = "temperature_QC" ;
+	short temperature_QC(pressure) ;
+		temperature_QC:long_name = "temperature_QC_flag" ;
+		temperature_QC:units = "woce_flags" ;
+		temperature_QC:C_format = "%1d" ;
+	double salinity(pressure) ;
+		salinity:long_name = "salinity" ;
+		salinity:units = "PSS-78" ;
+		salinity:data_min = 34.1928 ;
+		salinity:data_max = 34.5313 ;
+		salinity:C_format = "%8.4f" ;
+		salinity:WHPO_Variable_Name = "CTDSAL" ;
+		salinity:OBS_QC_VARIABLE = "salinity_QC" ;
+	short salinity_QC(pressure) ;
+		salinity_QC:long_name = "salinity_QC_flag" ;
+		salinity_QC:units = "woce_flags" ;
+		salinity_QC:C_format = "%1d" ;
+	double oxygen(pressure) ;
+		oxygen:long_name = "oxygen" ;
+		oxygen:units = "?mol/kg" ;
+		oxygen:data_min = 248.3 ;
+		oxygen:data_max = 317.5 ;
+		oxygen:C_format = "%9.4f" ;
+		oxygen:WHPO_Variable_Name = "CTDOXY" ;
+		oxygen:OBS_QC_VARIABLE = "oxygen_QC" ;
+	short oxygen_QC(pressure) ;
+		oxygen_QC:long_name = "oxygen_QC_flag" ;
+		oxygen_QC:units = "woce_flags" ;
+		oxygen_QC:C_format = "%1d" ;
+	double CTDXMISS(pressure) ;
+		CTDXMISS:long_name = "CTDXMISS" ;
+		CTDXMISS:units = "%TRANS" ;
+		CTDXMISS:data_min = 100.003 ;
+		CTDXMISS:data_max = 99.9097 ;
+		CTDXMISS:C_format = "%f" ;
+		CTDXMISS:WHPO_Variable_Name = "CTDXMISS" ;
+		CTDXMISS:OBS_QC_VARIABLE = "CTDXMISS_QC" ;
+	short CTDXMISS_QC(pressure) ;
+		CTDXMISS_QC:long_name = "CTDXMISS_QC_flag" ;
+		CTDXMISS_QC:units = "woce_flags" ;
+		CTDXMISS_QC:C_format = "%1d" ;
+	double CTDFLUOR(pressure) ;
+		CTDFLUOR:long_name = "CTDFLUOR" ;
+		CTDFLUOR:units = "MG/M^3" ;
+		CTDFLUOR:data_min = 0.0186 ;
+		CTDFLUOR:data_max = 0.3879 ;
+		CTDFLUOR:C_format = "%f" ;
+		CTDFLUOR:WHPO_Variable_Name = "CTDFLUOR" ;
+		CTDFLUOR:OBS_QC_VARIABLE = "CTDFLUOR_QC" ;
+	short CTDFLUOR_QC(pressure) ;
+		CTDFLUOR_QC:long_name = "CTDFLUOR_QC_flag" ;
+		CTDFLUOR_QC:units = "woce_flags" ;
+		CTDFLUOR_QC:C_format = "%1d" ;
+	int time(time) ;
+		time:long_name = "time" ;
+		time:units = "minutes since 1980-01-01 00:00:00" ;
+		time:data_min = 18426691 ;
+		time:data_max = 18426691 ;
+		time:C_format = "%10d" ;
+	float latitude(latitude) ;
+		latitude:long_name = "latitude" ;
+		latitude:units = "degrees_N" ;
+		latitude:data_min = -61.0507 ;
+		latitude:data_max = -61.0507 ;
+		latitude:C_format = "%9.4f" ;
+	float longitude(longitude) ;
+		longitude:long_name = "longitude" ;
+		longitude:units = "degrees_E" ;
+		longitude:data_min = -54.5895 ;
+		longitude:data_max = -54.5895 ;
+		longitude:C_format = "%9.4f" ;
+	int woce_date(time) ;
+		woce_date:long_name = "WOCE date" ;
+		woce_date:units = "yyyymmdd UTC" ;
+		woce_date:data_min = 20150113 ;
+		woce_date:data_max = 20150113 ;
+		woce_date:C_format = "%8d" ;
+	short woce_time(time) ;
+		woce_time:long_name = "WOCE time" ;
+		woce_time:units = "hhmm UTC" ;
+		woce_time:data_min = 731 ;
+		woce_time:data_max = 731 ;
+		woce_time:C_format = "%4d" ;
+	char station(string_dimension) ;
+		station:long_name = "STATION" ;
+		station:units = "unspecified" ;
+		station:C_format = "%s" ;
+	char cast(string_dimension) ;
+		cast:long_name = "CAST" ;
+		cast:units = "unspecified" ;
+		cast:C_format = "%s" ;
+
+// global attributes:
+		:EXPOCODE = "74JC20150110" ;
+		:Conventions = "COARDS/WOCE" ;
+		:WOCE_VERSION = "3." ;
+		:WOCE_ID = "SR1B" ;
+		:DATA_TYPE = "WOCE CTD" ;
+		:STATION_NUMBER = "1" ;
+		:CAST_NUMBER = "1" ;
+		:BOTTOM_DEPTH_METERS = 359 ;
+		:Creation_Time = "2017-01-23T17:58:42.103027Z" ;
+		:ORIGINAL_HEADER = "CTD,20170123CCHSIOSEE
+# Data source: http://cchdo.ucsd.edu/cruise/74JC20150110
+# LATITUDE_UNITS = degrees_North
+# LONGITUDE_UNITS = degrees_East
+# TIME_UNITS = HHMM
+# DATE_UNITS: YYYYMMDD
+# As per Y.Firing,  CCHDO changed CTDOXY,CTDXMISS, CTDFLUOR flags from 2 (acceptable measurement) to 1 (not calibrated)
+# CTD,20170112OCPNOCYLF - Originator Time Stamp 
+#    SHIP: James Clark Ross
+#    Cruise JR306; SR1B
+#    Region: Drake Passage; ~56W
+#    EXPOCODE: 74JC20150110
+#    DATES: 20150110 - 20150120
+#    Chief Scientist: B. King, NOCS ; Y. Firing, NOCS
+#    Supported by NERC National Capability
+#    30 stations with 24-place rosette
+#    CTD: Who - Y. Firing; Status - final
+#    Notes: The CTD PRS;  TMP;  SAL; data are all calibrated and good.
+#    DEPTH_TYPE   : COR
+#    These data should be acknowledged with: "Data were collected and made publicly available by the International Global Ship-based Hydrographic Investigations Program (GO-SHIP; http://www.go-ship.org/) with National Capability funding from the UK Natural Environment Research Council to the National Oceanography Centre."
+" ;
+		:WOCE_CTD_FLAG_DESCRIPTION = "::1 = Not calibrated:2 = Acceptable measurement:3 = Questionable measurement:4 = Bad measurement:5 = Not reported:6 = Interpolated over >2 dbar interval:7 = Despiked:8 = Not assigned for CTD data:9 = Not sampled:
+" ;
+}

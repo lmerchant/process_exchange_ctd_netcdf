@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<View collection="74JC20150110" xview="0.19">
+<NetcdfEmulation primaryVarID="10">
+<Dimension index="0" isLeadDim="1" varID="0"/>
+<Dimension index="1" varID="11"/>
+<MetaVariable colID="1" index="0" trgVID="0"/>
+<MetaVariable colID="3" index="1" trgVID="1"/>
+<MetaVariable colID="8" index="3" trgVID="3"/>
+<MetaVariable colID="7" index="4" trgVID="4"/>
+<MetaVariable colID="10" index="5" trgVID="5" cnvType="33"/>
+<MetaVariable colID="10" index="6" trgVID="6" cnvType="33"/>
+<MetaVariable colID="10" index="7" trgVID="7" cnvType="33"/>
+<MetaVariable colID="10" index="8" trgVID="8" cnvType="33"/>
+<MetaVariable colID="10" index="9" trgVID="9" cnvType="33"/>
+<MetaVariable colID="10" index="10" trgVID="10" cnvType="33"/>
+<MetaVariables>
+<digits_counts>0,0,0,3,3,0,0,0,0,0,0</digits_counts>
+</MetaVariables>
+<Variables>
+<digits_counts>0,2,4,0,4,0,4,0,4,0,4,0,4,0,2,4,2,4,4,0,0,2,2,2</digits_counts>
+</Variables>
+</NetcdfEmulation>
+<GeographicMap>
+<MapDomain lon_max="125.411" lat_min="-90" lat_max="90" lon_min="-234.589"/>
+<AutoMapLayerSettings coastline_fill="F"/>
+</GeographicMap>
+<MapWindow>
+<Symbol small_size="0.4" color="1" type="0" size="1.2"/>
+<Window>
+<Geometry y_length_bb="17" x_length_bb="24" x_offset_bb="2" x_right="125.411" y_top="90" y_projection="100" y_offset_bb="2.5" x_projection="100" x_left="-234.589" y_bottom="-90"/>
+</Window>
+</MapWindow>
+<PickedStations>
+<Station symbol_type="0" line_color="4" line_style="0" sequence_id="1" fill_color="4" frame_width="1" text_alignment="2" frame_color="4"/>
+</PickedStations>
+<IsoSurfaceVariables>
+<!--CASTNO [number] @ DATETIME [minutes since 2015-01-13 07:31:00]=first-->
+<IsoVariable var_id="1" surface_var_id="0" surface_value="first"/>
+<!--CTDFLUOR [MG/M^3] @ DATETIME [minutes since 2015-01-13 07:31:00]=first-->
+<IsoVariable var_id="2" surface_var_id="0" surface_value="first"/>
+<!--CTDFLUOR_FLAG_W @ DATETIME [minutes since 2015-01-13 07:31:00]=first-->
+<IsoVariable var_id="3" surface_var_id="0" surface_value="first"/>
+<!--CTDOXY [UMOL/KG] @ DATETIME [minutes since 2015-01-13 07:31:00]=first-->
+<IsoVariable var_id="4" surface_var_id="0" surface_value="first"/>
+</IsoSurfaceVariables>
+<CurrentSelection sampleID="5" stationID="0"/>
+</View>
