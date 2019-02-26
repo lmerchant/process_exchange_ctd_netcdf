@@ -104,11 +104,9 @@ def process_folder(raw_dir):
     fill_value = {'flag': 9, 'datetime': np.datetime64('NaT')}
 
     # Gather metadata data frame as a data series
-    # TODO import metadata into data series initially and 
-    # not a data frame
     metadata_ds = get_metadata_data_series(metadata_all, metadata_names, metadata_dtypes)
 
-    # # Merge body and metadata panda dataframes and series into one xarray
+    # Merge body and metadata into one xarray
     ctd_xr = add_body_and_metadata_to_xarray_dataset(body_all, parameter_names, parameter_dtypes, fill_value, metadata_names, metadata_ds)
 
     # Get metadata attributes
@@ -193,6 +191,7 @@ def get_metadata_data_series(metadata_all, metadata_names, metadata_dtypes):
     # Reset index from combining all data frames
     df = df.reset_index(drop=True)
 
+    # Squeeze each variable into a series
     for md_name in metadata_names:
 
         series = df[md_name].squeeze()
