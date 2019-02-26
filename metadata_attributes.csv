@@ -1,6 +1,6 @@
 variable,units,long_name
 LATITUDE,degrees_North,Latitude
-LONGITUDE,degrees,Longitude
+LONGITUDE,degrees_East,Longitude
 DATE,yyyymmdd,Date
 TIME,hhmm,Time
 DEC_YEAR,yyyy.####,DecimalYear
