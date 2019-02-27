@@ -299,29 +299,46 @@ def add_metadata_attributes_to_xarray(attributes, metadata_names, ctd_xr):
 
             data_attributes = {}
 
-            if 'units' in attribute.keys() and attribute['units']:
+            dictlist = []
 
-                data_attr = {'units': attribute['units']}
+            for key, value in attribute.items():
+                temp = [key,value]
+                dictlist.append(temp)
 
-                data_attributes = {**data_attributes, **data_attr}
+            for name in dictlist[1:]:
 
-            if 'long_name' in attribute.keys() and attribute['long_name']:
+                if name[1]:
 
-                data_attr = {'long_name': attribute['long_name']}
+                    data_attr = {name[0]: name[1]}
 
-                data_attributes = {**data_attributes, **data_attr}
+                    data_attributes = {**data_attributes, **data_attr}
 
-            if 'standard_name' in attribute.keys() and attribute['standard_name']:
 
-                data_attr = {'standard_name': attribute['standard_name']}
+            # data_attributes = {}
 
-                data_attributes = {**data_attributes, **data_attr}
+            # if 'units' in attribute.keys() and attribute['units']:
 
-            if 'axis' in attribute.keys() and attribute['axis']:
+            #     data_attr = {'units': attribute['units']}
 
-                data_attr = {'axis': attribute['axis']}
+            #     data_attributes = {**data_attributes, **data_attr}
 
-                data_attributes = {**data_attributes, **data_attr}
+            # if 'long_name' in attribute.keys() and attribute['long_name']:
+
+            #     data_attr = {'long_name': attribute['long_name']}
+
+            #     data_attributes = {**data_attributes, **data_attr}
+
+            # if 'standard_name' in attribute.keys() and attribute['standard_name']:
+
+            #     data_attr = {'standard_name': attribute['standard_name']}
+
+            #     data_attributes = {**data_attributes, **data_attr}
+
+            # if 'axis' in attribute.keys() and attribute['axis']:
+
+            #     data_attr = {'axis': attribute['axis']}
+
+            #     data_attributes = {**data_attributes, **data_attr}
 
 
             ctd_xr[attribute['variable']].attrs = data_attributes
