@@ -113,6 +113,9 @@ def process_folder(raw_dir):
     # Merge body and metadata into one xarray
     ctd_xr = add_body_and_metadata_to_xarray_dataset(body_all, parameter_names, parameter_dtypes, fill_value, metadata_names, metadata_ds)
 
+    ctd_xr = add_body_and_metadata_to_xarray_dataset2(body_all, parameter_names, parameter_dtypes, fill_value, metadata_names, metadata_ds)
+
+
     # Get metadata attributes
     metadata_attributes_file = './metadata_attributes.csv'
     metadata_attributes = get_metadata_attributes(metadata_attributes_file)
@@ -276,6 +279,73 @@ def add_body_and_metadata_to_xarray_dataset(body_all, parameter_names, parameter
     return ctd_xr
 
 
+def add_body_and_metadata_to_xarray_dataset2(body_all, parameter_names, parameter_dtypes, fill_value, metadata_names, metadata_ds):
+
+    # index column of each body dataframe was renamed 'N_level'
+    # The xarray dimension N_profile keeps track of each dataframe
+
+    # Create xarray dataset from list of dataframes with
+    # Dimension order (N_level, N_profile)
+    ctd_xr = xr.concat([df.to_xarray() for df in body_all], dim = 'N_profile')
+ 
+    # Convert to dataframe and assign data types
+    ctd_pd = ctd_xr.to_dataframe()
+
+    # Fill NaN values in qc flags with an interger fill value
+    for name in parameter_names:
+        if 'FLAG' in name and parameter_dtypes[name] == np.int8:
+            ctd_pd.loc[ctd_pd[name].isnull(), [name]] = fill_value['flag']
+
+    # Assign data types
+    ctd_pd = ctd_pd.astype(parameter_dtypes)
+
+    # Convert back to xarray
+    ctd_xr = ctd_pd.to_xarray()
+
+    # Transpose dimension order to (N_profile, N_level)
+    ctd_xr = ctd_xr.transpose()
+
+    # ----------------------
+   
+
+    variables_dict = {}
+
+    col_names = ctd_pd.columns
+
+    for col_name in col_names:
+        col_data = ctd_pd[col_name].to_xarray()
+        variables_dict[col_name] = col_data
+
+
+    # Convert metadata data series into a data array
+    metadata_dict = {}
+
+    for md_name in metadata_names:
+
+        meta_data = metadata_ds[md_name].T
+
+        metadata_dict[md_name] = xr.DataArray(meta_data, dims=['N_profile'])
+
+
+    # Add data arrays to ctd_xr
+
+    # Since merge appended to top, reverse order of metadata names
+    metadata_names_reversed = metadata_names[::-1]
+
+    for md_name in metadata_names_reversed:
+
+        ctd_xr = xr.merge([metadata_dict[md_name], ctd_xr])        
+
+
+    ctd_xr = xr.Dataset(data_vars=variables_dict, coords=metadata_dict)   
+
+    ctd_xr = ctd_xr.drop(['N_profile', 'N_level'])
+
+
+    return ctd_xr
+
+
+
 def get_metadata_attributes(attribute_file):
     
     data = []
@@ -398,8 +468,10 @@ def save_as_netcdf(ctd_xr, metadata_encoding):
     except:
         pass
 
+
+
     # Drop variables or index labels from this dataset.
-    ctd_xr.drop(['N_profile', 'N_level'])
+    #ctd_xr.drop(['N_profile', 'N_level'])
 
     #ctd_xr.to_netcdf(netcdf_filename)
 
