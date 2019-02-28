@@ -302,8 +302,8 @@ def add_body_and_metadata_to_xarray_dataset2(body_all, parameter_names, paramete
     # Convert back to xarray
     ctd_xr = ctd_pd.to_xarray()
 
-    # Transpose dimension order to (N_profile, N_level)
-    ctd_xr = ctd_xr.transpose()
+    # # Transpose dimension order to (N_profile, N_level)
+    # ctd_xr = ctd_xr.transpose()
 
     # ----------------------
    
@@ -341,6 +341,8 @@ def add_body_and_metadata_to_xarray_dataset2(body_all, parameter_names, paramete
 
     ctd_xr = ctd_xr.drop(['N_profile', 'N_level'])
 
+    # Transpose dimension order to (N_profile, N_level)
+    ctd_xr = ctd_xr.transpose()
 
     return ctd_xr
 
